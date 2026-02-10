@@ -13,6 +13,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 - `VDP_setTileMapDataRectFlipped()` and `VDP_setTileMapExFlipped()` for HFlip/VFlip tilemap drawing (#461)
 - `JOY_justPressed()`, `JOY_justReleased()`, `JOY_changed()` polling-style input edge detection
 - Frame timer system (`frame_timer.h`) — 8-slot one-shot/repeating alarm callbacks
+- Debug overlay (`debug_overlay.h`) — compile-gated on-screen CPU%, free RAM, custom stats
 
 ### Fixed
 - Rescomp now fully supports Tiled object templates (.tx files) with attribute and property merging (#466)
