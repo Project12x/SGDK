@@ -12,7 +12,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 - Open issue analysis for #326, #363, #436, #461, #466
 
 ### Fixed
-- Rescomp now detects Tiled object templates and emits a clear error instead of silently producing empty data (#466)
+- Rescomp now fully supports Tiled object templates (.tx files) with attribute and property merging (#466)
 
 ### Planned
 - Phase 0: Bug fixes (#466 rescomp templates, #326 Team Player, #461 tilemap flip, #363 Retro-Bit timing)

@@ -742,22 +742,32 @@ public class TMX {
 
             // get all objects
             for (Element objectElement : objectElements) {
-                // check for unsupported Tiled object templates
+                // resolve Tiled object template if present
                 final String templateRef = getAttribute(objectElement, ATTR_TEMPLATE, "");
+                Element templateObject = null;
                 if (!StringUtil.isEmpty(templateRef)) {
-                    final int templateObjId = XMLUtil.getAttributeIntValue(objectElement, ATTR_ID, 0);
-                    throw new Exception("Object id=" + templateObjId + " in layer '" + layerName
-                            + "' uses a Tiled template ('" + templateRef
-                            + "'). Object templates are not supported by rescomp."
-                            + " Please detach the template (right-click -> 'Detach from Template' in Tiled)"
-                            + " to inline the object properties.");
+                    // resolve template path relative to the TMX file
+                    final String templatePath = FileUtil.getDirectory(file) + templateRef;
+                    if (!FileUtil.exists(templatePath))
+                        throw new Exception("Object template file '" + templateRef
+                                + "' not found (resolved to '" + templatePath
+                                + "') referenced by object id="
+                                + XMLUtil.getAttributeIntValue(objectElement, ATTR_ID, 0)
+                                + " in TMX file: " + file);
+
+                    final Document templateDoc = XMLUtil.loadDocument(templatePath);
+                    final Element templateRoot = XMLUtil.getRootElement(templateDoc);
+                    templateObject = XMLUtil.getElement(templateRoot, ID_OBJECT);
+
+                    if (templateObject == null)
+                        throw new Exception("No <object> element found in template file '" + templatePath + "'");
                 }
 
                 // Tiled <= 1.8 uses 'type' for object type
-                String objectType = getAttribute(objectElement, ATTR_TYPE, "");
+                String objectType = getResolvedAttribute(objectElement, templateObject, ATTR_TYPE, "");
                 // Tiled > 1.8 uses 'class' for object type
                 if (StringUtil.isEmpty(objectType))
-                    objectType = getAttribute(objectElement, ATTR_CLASS, "");
+                    objectType = getResolvedAttribute(objectElement, templateObject, ATTR_CLASS, "");
 
                 // type filter enabled and not matching type ? --> next object
                 if (!StringUtil.isEmpty(typeFilter) && !StringUtil.equals(objectType, typeFilter))
@@ -767,19 +777,24 @@ public class TMX {
                 tFields.clear();
 
                 final int id = XMLUtil.getAttributeIntValue(objectElement, ATTR_ID, 0);
-                final String objectName = getAttribute(objectElement, ATTR_NAME, "object_" + id);
+                final String objectName = getResolvedAttribute(objectElement, templateObject, ATTR_NAME,
+                        "object_" + id);
                 final double x = XMLUtil.getAttributeDoubleValue(objectElement, ATTR_X, 0d);
                 final double y = XMLUtil.getAttributeDoubleValue(objectElement, ATTR_Y, 0d);
-                final double w = XMLUtil.getAttributeDoubleValue(objectElement, ATTR_WIDTH, 0d);
-                final double h = XMLUtil.getAttributeDoubleValue(objectElement, ATTR_HEIGHT, 0d);
-                final String visible = getAttribute(objectElement, ATTR_VISIBLE, "1");
+                final double w = getResolvedDoubleAttribute(objectElement, templateObject, ATTR_WIDTH, 0d);
+                final double h = getResolvedDoubleAttribute(objectElement, templateObject, ATTR_HEIGHT, 0d);
+                final String visible = getResolvedAttribute(objectElement, templateObject, ATTR_VISIBLE, "1");
 
                 // get text from the built-in text group if it exists (only for text objects)
                 // (this is not the same as the text property)
                 final String text = getText(objectElement);
 
-                // get all properties
-                final List<Element> propertyElements = getProperties(objectElement, new ArrayList<Element>());
+                // get all properties (merged from template + inline, inline overrides)
+                final List<Element> propertyElements;
+                if (templateObject != null)
+                    propertyElements = getMergedProperties(objectElement, templateObject);
+                else
+                    propertyElements = getProperties(objectElement, new ArrayList<Element>());
 
                 // build all fields from the properties
                 for (Element property : propertyElements) {
@@ -926,6 +941,59 @@ public class TMX {
             }
 
             return result;
+        }
+
+        /**
+         * Merge properties from a template object and an inline object.
+         * Inline properties override template properties with the same name.
+         */
+        private List<Element> getMergedProperties(Element inlineObject, Element templateObject) {
+            // collect template properties as defaults
+            final List<Element> templateProps = getProperties(templateObject, new ArrayList<Element>());
+            // collect inline properties (these override)
+            final List<Element> inlineProps = getProperties(inlineObject, new ArrayList<Element>());
+
+            // build set of inline property names for fast lookup
+            final Set<String> inlineNames = new HashSet<>();
+            for (Element prop : inlineProps)
+                inlineNames.add(getAttribute(prop, ATTR_NAME, "").toLowerCase());
+
+            // start with inline properties, then add template properties not overridden
+            final List<Element> merged = new ArrayList<>(inlineProps);
+            for (Element prop : templateProps) {
+                final String name = getAttribute(prop, ATTR_NAME, "").toLowerCase();
+                if (!inlineNames.contains(name))
+                    merged.add(prop);
+            }
+
+            return merged;
+        }
+
+        /**
+         * Get an attribute value with template fallback.
+         * Inline value wins over template value, which wins over the default.
+         */
+        private static String getResolvedAttribute(Element inline, Element template, String attrName, String def) {
+            final String inlineVal = getAttribute(inline, attrName, "");
+            if (!StringUtil.isEmpty(inlineVal))
+                return inlineVal;
+            if (template != null)
+                return getAttribute(template, attrName, def);
+            return def;
+        }
+
+        /**
+         * Get a double attribute value with template fallback.
+         */
+        private static double getResolvedDoubleAttribute(Element inline, Element template, String attrName,
+                double def) {
+            // check if the inline element has the attribute explicitly set
+            final String inlineVal = getAttribute(inline, attrName, "");
+            if (!StringUtil.isEmpty(inlineVal))
+                return XMLUtil.getAttributeDoubleValue(inline, attrName, def);
+            if (template != null)
+                return XMLUtil.getAttributeDoubleValue(template, attrName, def);
+            return def;
         }
 
         private String getText(Element objectElement) {
