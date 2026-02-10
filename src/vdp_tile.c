@@ -207,6 +207,22 @@ void VDP_setTileMapXY(VDPPlane plane, u16 tile, u16 x, u16 y) {
   *pwdata = tile;
 }
 
+u16 VDP_getTileMapXY(VDPPlane plane, u16 x, u16 y) {
+  vu32 *plctrl;
+  vu16 *pwdata;
+  u16 addr;
+
+  /* point to vdp port */
+  plctrl = (u32 *)VDP_CTRL_PORT;
+  pwdata = (u16 *)VDP_DATA_PORT;
+
+  // get address
+  addr = VDP_getPlaneAddress(plane, x, y);
+
+  *plctrl = VDP_READ_VRAM_ADDR((u32)addr);
+  return *pwdata;
+}
+
 void VDP_clearTileMapRect(VDPPlane plane, u16 x, u16 y, u16 w, u16 h) {
   VDP_fillTileMapRect(plane, 0, x, y, w, h);
 }

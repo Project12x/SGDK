@@ -14,6 +14,13 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 - `JOY_justPressed()`, `JOY_justReleased()`, `JOY_changed()` polling-style input edge detection
 - Frame timer system (`frame_timer.h`) — 8-slot one-shot/repeating alarm callbacks
 - Debug overlay (`debug_overlay.h`) — compile-gated on-screen CPU%, free RAM, custom stats
+- VRAM tile index allocator (`vram_alloc.h`) — bump allocator for VRAM tile management
+- Palette cycling utilities (`pal_cycle.h`) — rotate colors in CRAM or RAM buffers
+- `VDP_getTileMapXY()` — read tile attributes from VRAM plane position
+- `VDP_drawNumber()` / `VDP_drawNumberBG()` — shorthand for drawing numeric values
+
+### Changed
+- Debug overlay now uses `SYS_getCPULoad()` instead of manual subtick measurement
 
 ### Fixed
 - Rescomp now fully supports Tiled object templates (.tx files) with attribute and property merging (#466)

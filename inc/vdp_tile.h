@@ -500,6 +500,30 @@ void VDP_setTileMapDataEx(u16 planeAddr, const u16 *data, u16 basetile, u16 ind,
 void VDP_setTileMapXY(VDPPlane plane, u16 tile, u16 x, u16 y);
 /**
  *  \brief
+ *      Read tilemap data at specified position.
+ *
+ *  \param plane
+ *      Plane where we want to read tilemap data.<br>
+ *      Accepted values are:<br>
+ *      - BG_A<br>
+ *      - BG_B<br>
+ *      - WINDOW<br>
+ *  \param x
+ *      X position (in tile).
+ *  \param y
+ *      Y position (in tile).
+ *  \return
+ *      Tile attribute word at the specified position.
+ *
+ *  Read the tile attribute word (tilemap wrapping supported) at the given
+ * position. The returned value includes the tile index, palette, priority,
+ * and flip flags (see TILE_ATTR* macros).
+ *
+ *  \see VDP_setTileMapXY()
+ */
+u16 VDP_getTileMapXY(VDPPlane plane, u16 x, u16 y);
+/**
+ *  \brief
  *      Clear specified region of tilemap.
  *
  *  \param plane

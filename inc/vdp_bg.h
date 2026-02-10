@@ -17,11 +17,11 @@
 #include "vdp.h"
 #include "vdp_tile.h"
 
-
 /**
  *  \brief
- *      Image structure which contains all data to define an image in a background plane.<br>
- *      Use the unpackImage() method to unpack if compression is enabled in TileSet or TileMap structure.
+ *      Image structure which contains all data to define an image in a
+ * background plane.<br> Use the unpackImage() method to unpack if compression
+ * is enabled in TileSet or TileMap structure.
  *
  *  \param palette
  *      Palette data.
@@ -30,13 +30,11 @@
  *  \param tilemap
  *      TileMap data structure (contains tilemap definition for the image).
  */
-typedef struct
-{
-    Palette *palette;
-    TileSet *tileset;
-    TileMap *tilemap;
+typedef struct {
+  Palette *palette;
+  TileSet *tileset;
+  TileMap *tilemap;
 } Image;
-
 
 /**
  *  Contains current VRAM tile position where we will upload next tile data.
@@ -70,7 +68,8 @@ extern u16 curTileInd;
 void VDP_setHorizontalScroll(VDPPlane plane, s16 value);
 /**
  *  \brief
- *      Same as #VDP_setHorizontalScroll(..) except that it will delay scroll update on VSync.
+ *      Same as #VDP_setHorizontalScroll(..) except that it will delay scroll
+ * update on VSync.
  *
  *  \param plane
  *      Plane we want to set the horizontal scroll.<br>
@@ -107,8 +106,8 @@ void VDP_setHorizontalScrollVSync(VDPPlane plane, s16 value);
  *  \param len
  *      Number of tile to set.
  *  \param tm
- *      Transfer method, it's recommended to use DMA_QUEUE so it will be executed as fast as possible during VBlank.<br>
- *      Accepted values are:<br>
+ *      Transfer method, it's recommended to use DMA_QUEUE so it will be
+ * executed as fast as possible during VBlank.<br> Accepted values are:<br>
  *      - CPU<br>
  *      - DMA<br>
  *      - DMA_QUEUE<br>
@@ -116,7 +115,8 @@ void VDP_setHorizontalScrollVSync(VDPPlane plane, s16 value);
  *
  *  \see VDP_setScrollingMode() function to change scroll mode.
  */
-void VDP_setHorizontalScrollTile(VDPPlane plane, u16 tile, s16* values, u16 len, TransferMethod tm);
+void VDP_setHorizontalScrollTile(VDPPlane plane, u16 tile, s16 *values, u16 len,
+                                 TransferMethod tm);
 /**
  *  \brief
  *      Set plane horizontal scroll (line scroll mode).<br>
@@ -134,12 +134,13 @@ void VDP_setHorizontalScrollTile(VDPPlane plane, u16 tile, s16* values, u16 len,
  *      First line we want to set the horizontal scroll.
  *  \param values
  *      H scroll offsets.<br>
- *      Negative values will move the plane to the left while positive values will move it to the right.
+ *      Negative values will move the plane to the left while positive values
+ * will move it to the right.
  *  \param len
  *      Number of line to set.
  *  \param tm
- *      Transfer method, it's recommended to use DMA_QUEUE so it will be executed as fast as possible during VBlank.<br>
- *      Accepted values are:<br>
+ *      Transfer method, it's recommended to use DMA_QUEUE so it will be
+ * executed as fast as possible during VBlank.<br> Accepted values are:<br>
  *      - CPU<br>
  *      - DMA<br>
  *      - DMA_QUEUE<br>
@@ -147,7 +148,8 @@ void VDP_setHorizontalScrollTile(VDPPlane plane, u16 tile, s16* values, u16 len,
  *
  *  \see VDP_setScrollingMode()
  */
-void VDP_setHorizontalScrollLine(VDPPlane plane, u16 line, s16* values, u16 len, TransferMethod tm);
+void VDP_setHorizontalScrollLine(VDPPlane plane, u16 line, s16 *values, u16 len,
+                                 TransferMethod tm);
 
 /**
  *  \brief
@@ -163,14 +165,16 @@ void VDP_setHorizontalScrollLine(VDPPlane plane, u16 line, s16* values, u16 len,
  *      - BG_B<br>
  *  \param value
  *      V scroll offset.<br>
- *      Negative value will move the plane down while positive value will move it up.
+ *      Negative value will move the plane down while positive value will move
+ * it up.
  *
  *  \see VDP_setScrollingMode()
  */
 void VDP_setVerticalScroll(VDPPlane plane, s16 value);
 /**
  *  \brief
- *      Same as #VDP_setVerticalScroll(..) except that it will delay scroll update on VSync.
+ *      Same as #VDP_setVerticalScroll(..) except that it will delay scroll
+ * update on VSync.
  *
  *  \param plane
  *      Plane we want to set the vertical scroll.<br>
@@ -179,7 +183,8 @@ void VDP_setVerticalScroll(VDPPlane plane, s16 value);
  *      - BG_B<br>
  *  \param value
  *      V scroll offset.<br>
- *      Negative value will move the plane down while positive value will move it up.
+ *      Negative value will move the plane down while positive value will move
+ * it up.
  *
  *  \see VDP_setHorizontalScroll()
  */
@@ -200,12 +205,13 @@ void VDP_setVerticalScrollVSync(VDPPlane plane, s16 value);
  *      First tile we want to set the vertical scroll.
  *  \param values
  *      V scroll offsets.<br>
- *      Negative values will move the plane down while positive values will move it up.
+ *      Negative values will move the plane down while positive values will move
+ * it up.
  *  \param len
  *      Number of tile to set.
  *  \param tm
- *      Transfer method, it's recommended to use DMA_QUEUE so it will be executed as fast as possible during VBlank.<br>
- *      Accepted values are:<br>
+ *      Transfer method, it's recommended to use DMA_QUEUE so it will be
+ * executed as fast as possible during VBlank.<br> Accepted values are:<br>
  *      - CPU<br>
  *      - DMA<br>
  *      - DMA_QUEUE<br>
@@ -213,7 +219,8 @@ void VDP_setVerticalScrollVSync(VDPPlane plane, s16 value);
  *
  *  \see VDP_setScrollingMode()
  */
-void VDP_setVerticalScrollTile(VDPPlane plane, u16 tile, s16* values, u16 len, TransferMethod tm);
+void VDP_setVerticalScrollTile(VDPPlane plane, u16 tile, s16 *values, u16 len,
+                               TransferMethod tm);
 
 /**
  *  \brief
@@ -226,8 +233,9 @@ void VDP_setVerticalScrollTile(VDPPlane plane, u16 tile, s16* values, u16 len, T
  *      - BG_B<br>
  *      - WINDOW<br>
  *  \param wait
- *      Wait the operation to complete when set to TRUE otherwise it returns immediately
- *      but then you will require to wait for DMA completion (#DMA_waitCompletion()) before accessing the VDP.
+ *      Wait the operation to complete when set to TRUE otherwise it returns
+ * immediately but then you will require to wait for DMA completion
+ * (#DMA_waitCompletion()) before accessing the VDP.
  */
 void VDP_clearPlane(VDPPlane plane, bool wait);
 
@@ -317,8 +325,8 @@ void VDP_setTextPriority(u16 prio);
  *  \param y
  *      y position (in tile).
  *  \param tm
- *      Transfer method, using DMA_QUEUE or DMA_QUEUE_COPY ensure that it will be executed during VBlank.<br>
- *      Accepted values are:<br>
+ *      Transfer method, using DMA_QUEUE or DMA_QUEUE_COPY ensure that it will
+ * be executed during VBlank.<br> Accepted values are:<br>
  *      - CPU<br>
  *      - DMA<br>
  *      - DMA_QUEUE<br>
@@ -329,7 +337,8 @@ void VDP_setTextPriority(u16 prio);
  *  \see VDP_setTextPriority(..)
  *  \see VDP_setTextPlane(..)
  */
-void VDP_drawTextEx(VDPPlane plane, const char* str, u16 basetile, u16 x, u16 y, TransferMethod tm);
+void VDP_drawTextEx(VDPPlane plane, const char *str, u16 basetile, u16 x, u16 y,
+                    TransferMethod tm);
 /**
  *  \brief
  *      Clear a single line portion of text (advanced method).
@@ -349,8 +358,8 @@ void VDP_drawTextEx(VDPPlane plane, const char* str, u16 basetile, u16 x, u16 y,
  *  \param w
  *      width to clear (in tile).
  *  \param tm
- *      Transfer method, using DMA_QUEUE or DMA_QUEUE_COPY ensure that it will be executed during VBlank.<br>
- *      Accepted values are:<br>
+ *      Transfer method, using DMA_QUEUE or DMA_QUEUE_COPY ensure that it will
+ * be executed during VBlank.<br> Accepted values are:<br>
  *      - CPU<br>
  *      - DMA<br>
  *      - DMA_QUEUE<br>
@@ -360,7 +369,8 @@ void VDP_drawTextEx(VDPPlane plane, const char* str, u16 basetile, u16 x, u16 y,
  *  \see VDP_clearTextArea(..)
  *  \see VDP_clearTextLine(..)
  */
-void VDP_clearTextEx(VDPPlane plane, u16 basetile, u16 x, u16 y, u16 w, TransferMethod tm);
+void VDP_clearTextEx(VDPPlane plane, u16 basetile, u16 x, u16 y, u16 w,
+                     TransferMethod tm);
 /**
  *  \brief
  *      Clear a specific area of text (advanced method).
@@ -382,8 +392,8 @@ void VDP_clearTextEx(VDPPlane plane, u16 basetile, u16 x, u16 y, u16 w, Transfer
  *  \param h
  *      heigth to clear (in tile).
  *  \param tm
- *      Transfer method, using DMA_QUEUE or DMA_QUEUE_COPY ensure that it will be executed during VBlank.<br>
- *      Accepted values are:<br>
+ *      Transfer method, using DMA_QUEUE or DMA_QUEUE_COPY ensure that it will
+ * be executed during VBlank.<br> Accepted values are:<br>
  *      - CPU<br>
  *      - DMA<br>
  *      - DMA_QUEUE<br>
@@ -392,7 +402,8 @@ void VDP_clearTextEx(VDPPlane plane, u16 basetile, u16 x, u16 y, u16 w, Transfer
  *  \see VDP_drawText(..)
  *  \see VDP_clearText(..)
  */
-void VDP_clearTextAreaEx(VDPPlane plane, u16 basetile, u16 x, u16 y, u16 w, u16 h, TransferMethod tm);
+void VDP_clearTextAreaEx(VDPPlane plane, u16 basetile, u16 x, u16 y, u16 w,
+                         u16 h, TransferMethod tm);
 
 /**
  *  \brief
@@ -417,7 +428,7 @@ void VDP_clearTextAreaEx(VDPPlane plane, u16 basetile, u16 x, u16 y, u16 w, u16 
  *  \see VDP_setTextPriority(..)
  *  \see VDP_setTextPlane(..)
  */
-void VDP_drawTextBG(VDPPlane plane, const char* str, u16 x, u16 y);
+void VDP_drawTextBG(VDPPlane plane, const char *str, u16 x, u16 y);
 /**
  *  \brief
  *      Clear a single line portion of text.
@@ -501,14 +512,15 @@ void VDP_clearTextLineBG(VDPPlane plane, u16 y);
  *  \see VDP_setTextPriority(..)
  *  \see VDP_setTextPlane(..)
  */
-void VDP_drawText(const char* str, u16 x, u16 y);
+void VDP_drawText(const char *str, u16 x, u16 y);
 
 /**
  *  \brief
  *      Draw text in specified plane and clear remaining unused space.<br>
- *      If the new line is shorter than the one previously drawn in this place, the old characters will be removed.<br>
- *      This function works significantly faster than calling VDP_clearText() and then VDP_drawText().
- *      It is suitable when a lot of updating information needs to be displayed on the screen.
+ *      If the new line is shorter than the one previously drawn in this place,
+ * the old characters will be removed.<br> This function works significantly
+ * faster than calling VDP_clearText() and then VDP_drawText(). It is suitable
+ * when a lot of updating information needs to be displayed on the screen.
  *
  *  \param plane
  *      Plane where we want to draw text.<br>
@@ -523,7 +535,8 @@ void VDP_drawText(const char* str, u16 x, u16 y);
  *  \param y
  *      y position (in tile).
  *  \param len
- *      Fixed string length. For correct operation, it must not exceed 40 characters.
+ *      Fixed string length. For correct operation, it must not exceed 40
+ * characters.
  *
  *  \see VDP_drawText(..)
  *  \see VDP_clearText(..)
@@ -531,14 +544,15 @@ void VDP_drawText(const char* str, u16 x, u16 y);
  *  \see VDP_setTextPriority(..)
  *  \see VDP_setTextPlane(..)
  */
-void VDP_drawTextBGFill(VDPPlane plane, const char* str, u16 x, u16 y, u16 len);
+void VDP_drawTextBGFill(VDPPlane plane, const char *str, u16 x, u16 y, u16 len);
 
 /**
  *  \brief
  *      Draw text and clear remaining unused space.<br>
- *      If the new line is shorter than the one previously drawn in this place, the old characters will be removed.<br>
- *      This function works significantly faster than calling VDP_clearText() and then VDP_drawText().
- *      It is suitable when a lot of updating information needs to be displayed on the screen.
+ *      If the new line is shorter than the one previously drawn in this place,
+ * the old characters will be removed.<br> This function works significantly
+ * faster than calling VDP_clearText() and then VDP_drawText(). It is suitable
+ * when a lot of updating information needs to be displayed on the screen.
  *
  *  \param str
  *      String to draw. For correct operation, it must not exceed 40 characters.
@@ -547,7 +561,8 @@ void VDP_drawTextBGFill(VDPPlane plane, const char* str, u16 x, u16 y, u16 len);
  *  \param y
  *      y position (in tile).
  *  \param len
- *      Fixed string length. For correct operation, it must not exceed 40 characters.
+ *      Fixed string length. For correct operation, it must not exceed 40
+ * characters.
  *
  *  \see VDP_drawText(..)
  *  \see VDP_clearText(..)
@@ -555,7 +570,7 @@ void VDP_drawTextBGFill(VDPPlane plane, const char* str, u16 x, u16 y, u16 len);
  *  \see VDP_setTextPriority(..)
  *  \see VDP_setTextPlane(..)
  */
-void VDP_drawTextFill(const char* str, u16 x, u16 y, u16 len);
+void VDP_drawTextFill(const char *str, u16 x, u16 y, u16 len);
 /**
  *  \brief
  *      Clear a single line portion of text.
@@ -621,11 +636,14 @@ void VDP_clearTextLine(u16 y);
  *  \param y
  *      Plane Y position (in tile).
  *  \return
- *      FALSE if there is not enough memory to unpack the specified Bitmap (only if compression was enabled).
+ *      FALSE if there is not enough memory to unpack the specified Bitmap (only
+ * if compression was enabled).
  *
- *  This function does "on the fly" 4bpp bitmap conversion to tile data and transfert them to VRAM.<br>
- *  It's very helpful when you use bitmap images but the conversion eats sometime so you should use it only for static screen only.<br>
- *  For "in-game" condition you should use VDP_loadTileData() method with prepared tile data.
+ *  This function does "on the fly" 4bpp bitmap conversion to tile data and
+ * transfert them to VRAM.<br> It's very helpful when you use bitmap images but
+ * the conversion eats sometime so you should use it only for static screen
+ * only.<br> For "in-game" condition you should use VDP_loadTileData() method
+ * with prepared tile data.
  *
  *  \see VDP_loadBMPTileData()
  */
@@ -652,19 +670,24 @@ bool VDP_drawBitmap(VDPPlane plane, const Bitmap *bitmap, u16 x, u16 y);
  *  \param loadpal
  *      Load the bitmap palette information when non zero (can be TRUE or FALSE)
  *  \return
- *      FALSE if there is not enough memory to unpack the specified Bitmap (only if compression was enabled).
+ *      FALSE if there is not enough memory to unpack the specified Bitmap (only
+ * if compression was enabled).
  *
- *  This function does "on the fly" 4bpp bitmap conversion to tile data and transfert them to VRAM.<br>
- *  It's very helpful when you use bitmap images but the conversion eats sometime so you should use it only for static screen only.<br>
- *  For "in-game" condition you should use VDP_loadTileData() method with prepared tile data.<br>
+ *  This function does "on the fly" 4bpp bitmap conversion to tile data and
+ * transfert them to VRAM.<br> It's very helpful when you use bitmap images but
+ * the conversion eats sometime so you should use it only for static screen
+ * only.<br> For "in-game" condition you should use VDP_loadTileData() method
+ * with prepared tile data.<br>
  *
  *  \see VDP_loadBMPTileData()
  */
-bool VDP_drawBitmapEx(VDPPlane plane, const Bitmap *bitmap, u16 basetile, u16 x, u16 y, bool loadpal);
+bool VDP_drawBitmapEx(VDPPlane plane, const Bitmap *bitmap, u16 basetile, u16 x,
+                      u16 y, bool loadpal);
 
 /**
  *  \brief
- *      Draw Image (using DMA) in specified background plane and at given position.
+ *      Draw Image (using DMA) in specified background plane and at given
+ * position.
  *
  *  \param plane
  *      Plane where we want to draw the tilemap.<br>
@@ -680,9 +703,11 @@ bool VDP_drawBitmapEx(VDPPlane plane, const Bitmap *bitmap, u16 basetile, u16 x,
  *  \param y
  *      Plane Y position (in tile).
  *  \return
- *      FALSE if there is not enough memory to unpack the specified Image (only if compression was enabled).
+ *      FALSE if there is not enough memory to unpack the specified Image (only
+ * if compression was enabled).
  *
- *  Load the image tiles data in VRAM and display it at specified plane position.
+ *  Load the image tiles data in VRAM and display it at specified plane
+ * position.
  *
  *  \see VDP_drawImageEx()
  */
@@ -711,13 +736,61 @@ bool VDP_drawImage(VDPPlane plane, const Image *image, u16 x, u16 y);
  *  \param dma
  *      use DMA
  *  \return
- *      FALSE if there is not enough memory to unpack the specified Image (only if image was packed).
+ *      FALSE if there is not enough memory to unpack the specified Image (only
+ * if image was packed).
  *
- *  Load the image tiles data in VRAM and display it at specified plane position.
+ *  Load the image tiles data in VRAM and display it at specified plane
+ * position.
  *
  *  \see VDP_drawImage()
  */
-bool VDP_drawImageEx(VDPPlane plane, const Image *image, u16 basetile, u16 x, u16 y, bool loadpal, bool dma);
+bool VDP_drawImageEx(VDPPlane plane, const Image *image, u16 basetile, u16 x,
+                     u16 y, bool loadpal, bool dma);
 
+/**
+ *  \brief
+ *      Draw a numeric value as text in specified plane.
+ *
+ *  \param plane
+ *      Plane where we want to draw the number.<br>
+ *      Accepted values are:<br>
+ *      - BG_A<br>
+ *      - BG_B<br>
+ *      - WINDOW<br>
+ *  \param value
+ *      Integer value to display.
+ *  \param x
+ *      X position (in tile).
+ *  \param y
+ *      Y position (in tile).
+ *  \param minWidth
+ *      Minimum display width in tiles. If > 0, the number is drawn
+ *      with trailing space padding using VDP_drawTextBGFill().
+ *      Pass 0 for no padding.
+ *
+ *  Convenience wrapper around sprintf + VDP_drawTextBG/VDP_drawTextBGFill
+ *  to avoid buffer management boilerplate in game code.
+ *
+ *  \see VDP_drawTextBG()
+ *  \see VDP_drawNumber()
+ */
+void VDP_drawNumberBG(VDPPlane plane, s16 value, u16 x, u16 y, u16 minWidth);
+/**
+ *  \brief
+ *      Draw a numeric value as text using current text plane.
+ *
+ *  \param value
+ *      Integer value to display.
+ *  \param x
+ *      X position (in tile).
+ *  \param y
+ *      Y position (in tile).
+ *  \param minWidth
+ *      Minimum display width in tiles (0 = no padding).
+ *
+ *  \see VDP_drawNumberBG()
+ *  \see VDP_drawText()
+ */
+void VDP_drawNumber(s16 value, u16 x, u16 y, u16 minWidth);
 
 #endif // _VDP_BG_H_

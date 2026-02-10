@@ -7,7 +7,7 @@
 
 #include "memory.h"
 #include "string.h"
-#include "timer.h"
+#include "sys.h"
 #include "vdp.h"
 #include "vdp_bg.h"
 
@@ -18,8 +18,6 @@ typedef struct {
 } DebugStat;
 
 static VDPPlane dbgPlane;
-static u32 frameStartTick;
-static u16 cpuPercent;
 static DebugStat stats[DBG_STAT_MAX];
 static char lineBuf[32];
 
@@ -27,8 +25,6 @@ void DBG_init(void) {
   u16 i;
 
   dbgPlane = BG_A;
-  frameStartTick = 0;
-  cpuPercent = 0;
 
   for (i = 0; i < DBG_STAT_MAX; i++) {
     stats[i].label = NULL;
@@ -38,27 +34,12 @@ void DBG_init(void) {
 
 void DBG_setPlane(VDPPlane plane) { dbgPlane = plane; }
 
-void DBG_startFrame(void) { frameStartTick = getSubTick(); }
+void DBG_startFrame(void) {
+  // No-op: CPU load is now read from SYS_getCPULoad()
+}
 
 void DBG_endFrame(void) {
-  u32 elapsed;
-  u32 endTick;
-
-  endTick = getSubTick();
-
-  // handle wraparound
-  if (endTick >= frameStartTick)
-    elapsed = endTick - frameStartTick;
-  else
-    elapsed = endTick + (0xFFFFFFFF - frameStartTick) + 1;
-
-  // NTSC: ~488 subticks per frame (16.7ms at ~29.2us per subtick)
-  // PAL:  ~586 subticks per frame (20ms)
-  // Use 488 as baseline for NTSC (most common)
-  if (elapsed > 488)
-    cpuPercent = 100;
-  else
-    cpuPercent = (elapsed * 100) / 488;
+  // No-op: CPU load is now read from SYS_getCPULoad()
 }
 
 void DBG_setStat(u16 line, const char *label, s16 value) {
@@ -81,11 +62,13 @@ void DBG_draw(void) {
   u16 row;
   u16 i;
   u16 freeMem;
+  u16 cpuLoad;
 
   row = 0;
 
-  // CPU usage
-  sprintf(lineBuf, "CPU:%3d%%", cpuPercent);
+  // CPU usage (from SGDK's built-in measurement)
+  cpuLoad = SYS_getCPULoad();
+  sprintf(lineBuf, "CPU:%3d%%", cpuLoad);
   VDP_drawTextBG(dbgPlane, lineBuf, 0, row);
   row++;
 
