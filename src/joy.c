@@ -236,19 +236,16 @@ NO_INLINE void JOY_reset()
 
         Z80_STATE_RESTORE
 
-        /* check if need to turn on an input device */
-        if ((portType[PORT_1] != PORT_TYPE_PAD) && (portType[PORT_2] != PORT_TYPE_PAD))
-        {
-            /* no pads - look for teamplayer or mouse */
-            if (portType[PORT_1] == PORT_TYPE_TEAMPLAYER)
-                JOY_setSupport(PORT_1, JOY_SUPPORT_TEAMPLAYER);
-            else if (portType[PORT_2] == PORT_TYPE_TEAMPLAYER)
-                JOY_setSupport(PORT_2, JOY_SUPPORT_TEAMPLAYER);
-            else if (portType[PORT_1] == PORT_TYPE_MOUSE)
-                JOY_setSupport(PORT_1, JOY_SUPPORT_MOUSE);
-            else if (portType[PORT_2] == PORT_TYPE_MOUSE)
-                JOY_setSupport(PORT_2, JOY_SUPPORT_MOUSE);
-        }
+        /* auto-enable detected peripherals on each port independently */
+        if (portType[PORT_1] == PORT_TYPE_TEAMPLAYER)
+            JOY_setSupport(PORT_1, JOY_SUPPORT_TEAMPLAYER);
+        else if (portType[PORT_1] == PORT_TYPE_MOUSE)
+            JOY_setSupport(PORT_1, JOY_SUPPORT_MOUSE);
+
+        if (portType[PORT_2] == PORT_TYPE_TEAMPLAYER)
+            JOY_setSupport(PORT_2, JOY_SUPPORT_TEAMPLAYER);
+        else if (portType[PORT_2] == PORT_TYPE_MOUSE)
+            JOY_setSupport(PORT_2, JOY_SUPPORT_MOUSE);
     }
 
     /* now update pads to reflect true type (3 or 6 button) */

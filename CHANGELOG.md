@@ -13,6 +13,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Fixed
 - Rescomp now fully supports Tiled object templates (.tx files) with attribute and property merging (#466)
+- Team Player and Mouse peripherals now auto-detected independently per port (#326)
 
 ### Planned
 - Phase 0: Bug fixes (#466 rescomp templates, #326 Team Player, #461 tilemap flip, #363 Retro-Bit timing)
