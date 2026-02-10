@@ -30,8 +30,7 @@ import sgdk.tool.FileUtil;
 import sgdk.tool.StringUtil;
 import sgdk.tool.XMLUtil;
 
-public class TMX
-{
+public class TMX {
     static final String ID_MAP = "map";
     static final String ID_TILESET = "tileset";
     static final String ID_LAYER = "layer";
@@ -64,6 +63,7 @@ public class TMX
     static final String ATTR_Y = "y";
     static final String ATTR_PROPERTYTYPE = "propertytype";
     static final String ATTR_VALUE = "value";
+    static final String ATTR_TEMPLATE = "template";
 
     static final String ATTR_VALUE_ORTHOGONAL = "orthogonal";
     static final String ATTR_VALUE_RIGHT_DOWN = "right-down";
@@ -94,8 +94,7 @@ public class TMX
     static final int TMX_AXE_FLIP = (1 << 29);
     static final int TMX_TILE_IND_MASK = 0x0FFFFFFF;
 
-    public static class TMXMap
-    {
+    public static class TMXMap {
         public final String file;
         public final String layerName;
         public final int tileSize;
@@ -110,8 +109,7 @@ public class TMX
         // used internally
         private final Map<TSXTileset, byte[]> prioTilesets;
 
-        public TMXMap(String file, String layerName) throws Exception
-        {
+        public TMXMap(String file, String layerName) throws Exception {
             if (!FileUtil.exists(file))
                 throw new FileNotFoundException("TMX file '" + file + " not found !");
 
@@ -123,7 +121,8 @@ public class TMX
 
             // check this is the map node
             if (!mapElement.getNodeName().toLowerCase().equals(ID_MAP))
-                throw new Exception("Expected " + ID_MAP + " root node in TMX file: " + file + ", " + mapElement.getNodeName() + " found.");
+                throw new Exception("Expected " + ID_MAP + " root node in TMX file: " + file + ", "
+                        + mapElement.getNodeName() + " found.");
 
             checkAttributValue(mapElement, ATTR_ORIENTATION, ATTR_VALUE_ORTHOGONAL, ATTR_VALUE_ORTHOGONAL, file);
             checkAttributValue(mapElement, ATTR_RENDERORDER, ATTR_VALUE_RIGHT_DOWN, ATTR_VALUE_RIGHT_DOWN, file);
@@ -136,7 +135,8 @@ public class TMX
             if ((tw & 7) != 0)
                 throw new Exception("Unsuported tile size (should be a multiple of 8) in TMX file: " + file);
             if ((tw < 8) || (tw > 32))
-                throw new Exception(tw + " x " + th + " tile size not supported (only 8x8 to 32x32 allowed) in TMX file: " + file);
+                throw new Exception(
+                        tw + " x " + th + " tile size not supported (only 8x8 to 32x32 allowed) in TMX file: " + file);
 
             tileSize = tw;
 
@@ -152,8 +152,7 @@ public class TMX
 
             // add TSX tilesets
             tsxTilesets = new ArrayList<>();
-            for (Element tilesetElement : tilesetElements)
-            {
+            for (Element tilesetElement : tilesetElements) {
                 // start ind with dummy blank tile correction
                 final int startId = XMLUtil.getAttributeIntValue(tilesetElement, ATTR_FIRSTGID, 0);
                 final String source = XMLUtil.getAttributeValue(tilesetElement, ATTR_SOURCE, "");
@@ -167,10 +166,11 @@ public class TMX
                     tsxTilesets.add(new TSXTileset(file, startId, tilesetElement));
             }
 
-            for (TSXTileset tileset : tsxTilesets)
-            {
+            for (TSXTileset tileset : tsxTilesets) {
                 if (tileset.tileSize != tileSize)
-                    throw new Exception("One of the referenced tileset has a different tile size than map tile size in TMX file: " + file);
+                    throw new Exception(
+                            "One of the referenced tileset has a different tile size than map tile size in TMX file: "
+                                    + file);
             }
 
             // sort tilesets on startTileIndex
@@ -187,8 +187,7 @@ public class TMX
             // single layer definition ?
             boolean singleLayer = hasElementNamed(layers, layerName);
 
-            if (singleLayer)
-            {
+            if (singleLayer) {
                 final Element mainLayer = getElementNamed(layers, layerName);
                 // try to get priority layer
                 Element priorityLayer = getElementNamed(layers, layerName + SUFFIX_PRIORITY);
@@ -200,9 +199,7 @@ public class TMX
                 mapData1 = getMapData(mainLayer, w, h, file);
                 // get priority data in mapData2
                 mapData2 = (priorityLayer != null) ? getMapData(priorityLayer, w, h, file) : new int[mapData1.length];
-            }
-            else
-            {
+            } else {
                 // use alternate priority definition
                 final Element lowPriorityLayer = getElementNamed(layers, layerName + SUFFIX_LOW_PRIORITY);
                 final Element highPriorityLayer = getElementNamed(layers, layerName + SUFFIX_HIGH_PRIORITY);
@@ -234,33 +231,27 @@ public class TMX
 
             int ind = 0;
 
-            for (int y = 0; y < h; y++)
-            {
-                for (int x = 0; x < w; x++)
-                {
+            for (int y = 0; y < h; y++) {
+                for (int x = 0; x < w; x++) {
                     final int v;
                     final int prio;
 
                     // single layer for map data
-                    if (singleLayer)
-                    {
+                    if (singleLayer) {
                         // get map data
                         v = mapData1[ind];
                         // get prio data
                         prio = mapData2[ind];
                     }
                     // 2 layers (low and high prio)
-                    else
-                    {
+                    else {
                         // data in high prio map ? --> use it
-                        if (mapData2[ind] != 0)
-                        {
+                        if (mapData2[ind] != 0) {
                             v = mapData2[ind];
                             prio = -1;
                         }
                         // use low prio map data
-                        else
-                        {
+                        else {
                             v = mapData1[ind];
                             prio = 0;
                         }
@@ -270,11 +261,11 @@ public class TMX
                     boolean vflip = (v & TMX_VFLIP) != 0;
                     final boolean axeflip = (v & TMX_AXE_FLIP) != 0;
 
-                    if (axeflip)
-                    {
+                    if (axeflip) {
                         if (!Compiler.DAGame)
                             System.out.println(
-                                    "WARNING: unsupported rotated tile found at [" + x + "," + y + "] in layer '" + layerName + "' of TMX file: " + file);
+                                    "WARNING: unsupported rotated tile found at [" + x + "," + y + "] in layer '"
+                                            + layerName + "' of TMX file: " + file);
 
                         // assume vflip for DA
                         if (Compiler.DAGame)
@@ -283,27 +274,30 @@ public class TMX
 
                     final int tileInd = v & TMX_TILE_IND_MASK;
 
-                    // we check that tile index is not higher than 2^16 (we store extra attributes in upper word)
+                    // we check that tile index is not higher than 2^16 (we store extra attributes
+                    // in upper word)
                     if (tileInd > 0xFFFF)
-                        throw new Exception("Tile [" + x + "," + y + "] of layer '" + layerName + "' has an index > 65535 (" + v
-                                + "), maximum supported tile index is 65535");
+                        throw new Exception(
+                                "Tile [" + x + "," + y + "] of layer '" + layerName + "' has an index > 65535 (" + v
+                                        + "), maximum supported tile index is 65535");
 
                     // define used TSX tileset
-                    if (tileInd != 0)
-                    {
+                    if (tileInd != 0) {
                         final TSXTileset tileset = getTSXTilesetFor(tileInd);
 
                         if (tileset == null)
-                            throw new Exception("Tile [" + x + "," + y + "] of layer '" + layerName + "' is referencing an invalid index (" + tileInd
+                            throw new Exception("Tile [" + x + "," + y + "] of layer '" + layerName
+                                    + "' is referencing an invalid index (" + tileInd
                                     + " is outside available tiles range)");
 
                         // common mistake so better to check
-                        if (Compiler.DAGame)
-                        {
+                        if (Compiler.DAGame) {
                             if (tileset.file.contains("Gamefield"))
-                                throw new Exception("Tile [" + x + "," + y + "]  of layer '" + layerName + "' is referencing the Gamefield overlay tileset !)");
+                                throw new Exception("Tile [" + x + "," + y + "]  of layer '" + layerName
+                                        + "' is referencing the Gamefield overlay tileset !)");
                             if (tileset.file.contains("DMA"))
-                                throw new Exception("Tile [" + x + "," + y + "]  of layer '" + layerName + "' is referencing the Gamefield overlay tileset !)");
+                                throw new Exception("Tile [" + x + "," + y + "]  of layer '" + layerName
+                                        + "' is referencing the Gamefield overlay tileset !)");
                         }
 
                         usedTilesetsSet.add(tileset);
@@ -315,8 +309,7 @@ public class TMX
                     // get priority data
                     Integer prioData = prioIndexesMap.get(Integer.valueOf(prio));
                     // not yet in the map ?
-                    if (prioData == null)
-                    {
+                    if (prioData == null) {
                         // get result
                         prioData = Integer.valueOf(getPrio(prio, baseTileSize));
                         // store it in map for next time
@@ -327,18 +320,15 @@ public class TMX
                     int data = prioData.intValue();
 
                     // something to set ?
-                    if (data != 0)
-                    {
+                    if (data != 0) {
                         // convert to 8x8 tile index
                         int prioInd = ((y * w * baseTileSize) * baseTileSize) + (x * baseTileSize);
                         // get mask to test next tile prio
                         int mask = 1 << (baseTileSize * baseTileSize);
 
                         // set priority data in priority map
-                        for (int j = 0; j < baseTileSize; j++)
-                        {
-                            for (int i = 0; i < baseTileSize; i++)
-                            {
+                        for (int j = 0; j < baseTileSize; j++) {
+                            for (int i = 0; i < baseTileSize; i++) {
                                 // set prio
                                 prioMap[prioInd] = (data & mask) != 0;
 
@@ -363,16 +353,15 @@ public class TMX
             if (usedTilesets.size() > 1)
                 Collections.sort(usedTilesets);
 
-            if (Compiler.DAGame)
-            {
-                System.out.println("TMX map '" + file + "' layer '" + layerName + "' is using " + usedTilesetsSet.size() + " tilesets:");
+            if (Compiler.DAGame) {
+                System.out.println("TMX map '" + file + "' layer '" + layerName + "' is using " + usedTilesetsSet.size()
+                        + " tilesets:");
                 for (TSXTileset tileset : usedTilesetsSet)
                     System.out.println(tileset);
             }
         }
 
-        private int getPrio(int ind, int baseTileSize) throws Exception
-        {
+        private int getPrio(int ind, int baseTileSize) throws Exception {
             // special case of blank tile --> all LOW priority
             if (ind == 0)
                 return 0;
@@ -387,8 +376,7 @@ public class TMX
             byte[] prioTileset = prioTilesets.get(tsxTileset);
 
             // not yet set in map ?
-            if (prioTileset == null)
-            {
+            if (prioTileset == null) {
                 // load tileset
                 prioTileset = tsxTileset.getTilesetImage8bpp(Compiler.DAGame ? false : true);
                 // add it in map
@@ -409,19 +397,15 @@ public class TMX
             int result = 0;
 
             // build prio data (8x8 tile based)
-            for (int j = 0; j < baseTileSize; j++)
-            {
-                for (int i = 0; i < baseTileSize; i++)
-                {
+            for (int j = 0; j < baseTileSize; j++) {
+                for (int i = 0; i < baseTileSize; i++) {
                     // get tile
                     Tile.getImageTile(prioTileset, imgW, imgH, adjTileInd, 8, imageTile);
 
                     // check that tile is empty
-                    for (int d : imageTile)
-                    {
+                    for (int d : imageTile) {
                         // not empty ? --> set prio and stop
-                        if (d != 0)
-                        {
+                        if (d != 0) {
                             result |= 1;
                             break;
                         }
@@ -439,8 +423,7 @@ public class TMX
             return result;
         }
 
-        private TSXTileset getTSXTilesetFor(int tileInd)
-        {
+        private TSXTileset getTSXTilesetFor(int tileInd) {
             for (TSXTileset tileset : tsxTilesets)
                 if (tileset.containsTile(tileInd))
                     return tileset;
@@ -448,8 +431,8 @@ public class TMX
             return null;
         }
 
-        public List<Tileset> getTilesets(String baseId, Compression compression, boolean temp, TileOrdering order) throws Exception
-        {
+        public List<Tileset> getTilesets(String baseId, Compression compression, boolean temp, TileOrdering order)
+                throws Exception {
             return TSX.getTilesets(usedTilesets, baseId, compression, temp, order);
         }
 
@@ -460,7 +443,8 @@ public class TMX
         // final short[] data = new short[result.w * result.h];
         //
         // final boolean mapBasePrio = (mapBase & Tile.TILE_PRIORITY_MASK) != 0;
-        // final int mapBasePal = (mapBase & Tile.TILE_PALETTE_MASK) >> Tile.TILE_PALETTE_SFT;
+        // final int mapBasePal = (mapBase & Tile.TILE_PALETTE_MASK) >>
+        // Tile.TILE_PALETTE_SFT;
         // final int mapBaseTileInd = mapBase & Tile.TILE_INDEX_MASK;
         // // we have a base offset --> we can use system plain tiles
         // final boolean useSystemTiles = mapBaseTileInd != 0;
@@ -468,8 +452,10 @@ public class TMX
         // // need to have a blank tile
         // if (!useSystemTiles)
         // {
-        // System.out.println("WARNING: you're using TMX map (file: " + file + ") with a null map base index.");
-        // System.out.println("See note in rescomp.txt about the required dummy blank tile in the tileset.");
+        // System.out.println("WARNING: you're using TMX map (file: " + file + ") with a
+        // null map base index.");
+        // System.out.println("See note in rescomp.txt about the required dummy blank
+        // tile in the tileset.");
         // }
         //
         // int ind = 0;
@@ -504,7 +490,8 @@ public class TMX
         // final TSXTileset tileset = getTSXTilesetFor(tileInd);
         //
         // if (tileset == null)
-        // throw new Exception("Cannot find tilset for tile #" + tileInd + " in TMX file: " + file);
+        // throw new Exception("Cannot find tilset for tile #" + tileInd + " in TMX
+        // file: " + file);
         //
         // final int tileRelativeInd = (tileInd - tileset.startTileIndex);
         // final int tileIndX = tileRelativeInd % tileset.imageTileWidth;
@@ -516,16 +503,19 @@ public class TMX
         // int tmTileInd = (tileIndX * ts) + ((tileIndY * ts) * imageSingleTileWidth);
         //
         // if (tmTileInd >= 2048)
-        // throw new Exception("Can't have tile index >= 2048 in TMX file: " + file + ", try to reduce number of unique
+        // throw new Exception("Can't have tile index >= 2048 in TMX file: " + file + ",
+        // try to reduce number of unique
         // tile.");
         //
         // for (int ty = 0; ty < ts; ty++)
         // {
         // for (int tx = 0; tx < ts; tx++)
         // {
-        // data[tmInd] = (short) Tile.TILE_ATTR_FULL(mapBasePal, mapBasePrio | ((tileAttr & Tile.TILE_PRIORITY_MASK) !=
+        // data[tmInd] = (short) Tile.TILE_ATTR_FULL(mapBasePal, mapBasePrio |
+        // ((tileAttr & Tile.TILE_PRIORITY_MASK) !=
         // 0),
-        // (tileAttr & Tile.TILE_VFLIP_MASK) != 0, (tileAttr & Tile.TILE_HFLIP_MASK) != 0,
+        // (tileAttr & Tile.TILE_VFLIP_MASK) != 0, (tileAttr & Tile.TILE_HFLIP_MASK) !=
+        // 0,
         // mapBaseTileInd + (tmTileInd & Tile.TILE_INDEX_MASK));
         // tmInd++;
         // tmTileInd++;
@@ -560,7 +550,8 @@ public class TMX
         // }
 
         // RAW tileset image (width = 256)
-        // public byte[] getTilesetImage() throws IllegalArgumentException, FileNotFoundException, IOException
+        // public byte[] getTilesetImage() throws IllegalArgumentException,
+        // FileNotFoundException, IOException
         // {
         // final int wt = 256 / tileSize;
         // final int ht = getTilesetImageHeight() / tileSize;
@@ -583,9 +574,11 @@ public class TMX
         // {
         // for (int xt = 0; xt < wt; xt++)
         // {
-        // final byte[] imageTile = Tile.getImageTile(tilesetImage, tilesetImageW, tilesetImageH, tileInd++, tileSize);
+        // final byte[] imageTile = Tile.getImageTile(tilesetImage, tilesetImageW,
+        // tilesetImageH, tileInd++, tileSize);
         // // copy tile
-        // Tile.copyTile(fullTilesetImage, 256, imageTile, xt * tileSize, yt * tileSize, tileSize);
+        // Tile.copyTile(fullTilesetImage, 256, imageTile, xt * tileSize, yt * tileSize,
+        // tileSize);
         //
         // // tileset done ? --> next tileset
         // if (--remaining == 0)
@@ -597,7 +590,8 @@ public class TMX
         // tileset = usedTilesets.get(tsInd++);
         // tilesetImage = tileset.getTilesetImage8bpp(false);
         // tilesetImageW = tileset.imageTileWidth * tileset.tileSize;
-        // tilesetImageH = (tileset.numTile / tileset.imageTileWidth) * tileset.tileSize;
+        // tilesetImageH = (tileset.numTile / tileset.imageTileWidth) *
+        // tileset.tileSize;
         // tileInd = 0;
         // remaining = tileset.numTile;
         // }
@@ -607,8 +601,7 @@ public class TMX
         // return fullTilesetImage;
         // }
 
-        public byte[] getMapImage() throws Exception
-        {
+        public byte[] getMapImage() throws Exception {
             final int mapImageW = w * tileSize;
             final int mapImageH = h * tileSize;
             final byte[] mapImage = new byte[mapImageW * mapImageH];
@@ -625,10 +618,8 @@ public class TMX
             final int baseTileSize = (tileSize / 8);
 
             int ind = 0;
-            for (int yt = 0; yt < h; yt++)
-            {
-                for (int xt = 0; xt < w; xt++)
-                {
+            for (int yt = 0; yt < h; yt++) {
+                for (int xt = 0; xt < w; xt++) {
                     final int tile = map[ind];
 
                     final int tileInd = tile & 0xFFFFFF;
@@ -640,17 +631,15 @@ public class TMX
                     byte[] imageTile;
 
                     // special case of blank tile
-                    if (tileInd == 0)
-                    {
+                    if (tileInd == 0) {
                         Arrays.fill(baseTile, (byte) 0);
                         imageTile = baseTile;
-                    }
-                    else
-                    {
+                    } else {
                         // find tileset for this tile
                         final TSXTileset tsxTileset = getTSXTilesetFor(tileInd);
                         // get tile
-                        imageTile = Tile.getImageTile(tilesets.get(tsxTileset), tsxTileset.imageTileWidth * tileSize, tsxTileset.imageTileHeigt * tileSize,
+                        imageTile = Tile.getImageTile(tilesets.get(tsxTileset), tsxTileset.imageTileWidth * tileSize,
+                                tsxTileset.imageTileHeigt * tileSize,
                                 tileInd - tsxTileset.startTileIndex, tileSize, baseTile);
                     }
 
@@ -662,10 +651,8 @@ public class TMX
                     int prioInd = ((yt * w * baseTileSize) * baseTileSize) + (xt * baseTileSize);
 
                     // set priority
-                    for (int j = 0; j < baseTileSize; j++)
-                    {
-                        for (int i = 0; i < baseTileSize; i++)
-                        {
+                    for (int j = 0; j < baseTileSize; j++) {
+                        for (int i = 0; i < baseTileSize; i++) {
                             // priority set on this tile ?
                             if (prioMap[prioInd])
                                 Tile.setPrioTile(imageTile, tileSize, i * 8, j * 8, 8);
@@ -690,26 +677,23 @@ public class TMX
         }
 
         @Override
-        public String toString()
-        {
+        public String toString() {
             return "tileSize=" + tileSize + " - w=" + w + " - h=" + h;
         }
     }
 
-    public static class TMXObjects
-    {
+    public static class TMXObjects {
         public final String file;
         public final String layerName;
         public final List<SObject> objects;
 
-        public static void resolveObjectsReferencesInResourceList(List<Resource> resourcesList)
-        {
+        public static void resolveObjectsReferencesInResourceList(List<Resource> resourcesList) {
             // Cross-checking all SObjects and resolving object field references
             Objects.resolveObjectsReferencesInReosurceList(resourcesList);
         }
-        
-        public TMXObjects(String baseId, String file, String layerName, String sortBy, LinkedHashMap<String, SGDKObjectType> fieldDefs, String typeFilter) throws Exception
-        {
+
+        public TMXObjects(String baseId, String file, String layerName, String sortBy,
+                LinkedHashMap<String, SGDKObjectType> fieldDefs, String typeFilter) throws Exception {
             if (!FileUtil.exists(file))
                 throw new FileNotFoundException("TMX file '" + file + " not found !");
 
@@ -722,7 +706,8 @@ public class TMX
 
             // check this is the map node
             if (!mapElement.getNodeName().toLowerCase().equals(ID_MAP))
-                throw new Exception("Expected " + ID_MAP + " root node in TMX file: " + file + ", " + mapElement.getNodeName() + " found.");
+                throw new Exception("Expected " + ID_MAP + " root node in TMX file: " + file + ", "
+                        + mapElement.getNodeName() + " found.");
 
             final int tw = XMLUtil.getAttributeIntValue(mapElement, ATTR_TILEWIDTH, 0);
             final int th = XMLUtil.getAttributeIntValue(mapElement, ATTR_TILEHEIGHT, 0);
@@ -732,7 +717,8 @@ public class TMX
             if ((tw & 7) != 0)
                 throw new Exception("Unsuported tile size (should be a multiple of 8) in TMX file: " + file);
             if ((tw < 8) || (tw > 32))
-                throw new Exception(tw + " x " + th + " tile size not supported (only 8x8 to 32x32 allowed) in TMX file: " + file);
+                throw new Exception(
+                        tw + " x " + th + " tile size not supported (only 8x8 to 32x32 allowed) in TMX file: " + file);
 
             final int tileSize = tw;
             final int mapWidth = XMLUtil.getAttributeIntValue(mapElement, ATTR_WIDTH, 0);
@@ -755,8 +741,18 @@ public class TMX
             final List<Element> objectElements = XMLUtil.getElements(group, ID_OBJECT);
 
             // get all objects
-            for (Element objectElement : objectElements)
-            {
+            for (Element objectElement : objectElements) {
+                // check for unsupported Tiled object templates
+                final String templateRef = getAttribute(objectElement, ATTR_TEMPLATE, "");
+                if (!StringUtil.isEmpty(templateRef)) {
+                    final int templateObjId = XMLUtil.getAttributeIntValue(objectElement, ATTR_ID, 0);
+                    throw new Exception("Object id=" + templateObjId + " in layer '" + layerName
+                            + "' uses a Tiled template ('" + templateRef
+                            + "'). Object templates are not supported by rescomp."
+                            + " Please detach the template (right-click -> 'Detach from Template' in Tiled)"
+                            + " to inline the object properties.");
+                }
+
                 // Tiled <= 1.8 uses 'type' for object type
                 String objectType = getAttribute(objectElement, ATTR_TYPE, "");
                 // Tiled > 1.8 uses 'class' for object type
@@ -777,87 +773,80 @@ public class TMX
                 final double w = XMLUtil.getAttributeDoubleValue(objectElement, ATTR_WIDTH, 0d);
                 final double h = XMLUtil.getAttributeDoubleValue(objectElement, ATTR_HEIGHT, 0d);
                 final String visible = getAttribute(objectElement, ATTR_VISIBLE, "1");
-                
+
                 // get text from the built-in text group if it exists (only for text objects)
-                //(this is not the same as the text property)
+                // (this is not the same as the text property)
                 final String text = getText(objectElement);
-                
+
                 // get all properties
                 final List<Element> propertyElements = getProperties(objectElement, new ArrayList<Element>());
 
                 // build all fields from the properties
-                for (Element property : propertyElements)
-                {
+                for (Element property : propertyElements) {
                     // always take the lower case version for name
                     final String name = getAttribute(property, ATTR_NAME, "").toLowerCase();
                     final String type = getAttribute(property, ATTR_TYPE, "");
                     final String propertyType = getAttribute(property, ATTR_PROPERTYTYPE, "");
                     final String value = getAttribute(property, ATTR_VALUE, "");
 
-                    
                     // export id field ?
-                    if (StringUtil.equals(name, ATTR_VALUE_EXPORT_ID))
-                    {
+                    if (StringUtil.equals(name, ATTR_VALUE_EXPORT_ID)) {
                         // set to true ? --> add 'id' field
                         if (StringUtil.equals(value.toLowerCase(), "true"))
-                            addField(objectName, tFields, new TField(ATTR_ID, TiledObjectType.INT, Integer.toString(id)));
-                    }                    
+                            addField(objectName, tFields,
+                                    new TField(ATTR_ID, TiledObjectType.INT, Integer.toString(id)));
+                    }
                     // export name field ?
-                    else if (StringUtil.equals(name, ATTR_VALUE_EXPORT_NAME))
-                    {
+                    else if (StringUtil.equals(name, ATTR_VALUE_EXPORT_NAME)) {
                         // set to true ? --> add 'name' field
                         if (StringUtil.equals(value.toLowerCase(), "true"))
                             addField(objectName, tFields, new TField(ATTR_NAME, TiledObjectType.STRING, objectName));
                     }
                     // export position field ?
-                    else if (StringUtil.equals(name, ATTR_VALUE_EXPORT_POSITION))
-                    {
+                    else if (StringUtil.equals(name, ATTR_VALUE_EXPORT_POSITION)) {
                         // set to true ? --> add 'x' and 'y' fields
-                        if (StringUtil.equals(value.toLowerCase(), "true"))
-                        {
-                            addField(objectName, tFields, new TField(ATTR_X, TiledObjectType.FLOAT, Double.toString(x)));
-                            addField(objectName, tFields, new TField(ATTR_Y, TiledObjectType.FLOAT, Double.toString(y)));
+                        if (StringUtil.equals(value.toLowerCase(), "true")) {
+                            addField(objectName, tFields,
+                                    new TField(ATTR_X, TiledObjectType.FLOAT, Double.toString(x)));
+                            addField(objectName, tFields,
+                                    new TField(ATTR_Y, TiledObjectType.FLOAT, Double.toString(y)));
                         }
                     }
                     // export size field ?
-                    else if (StringUtil.equals(name, ATTR_VALUE_EXPORT_SIZE))
-                    {
+                    else if (StringUtil.equals(name, ATTR_VALUE_EXPORT_SIZE)) {
                         // set to true ? --> add 'width' and 'height' field
-                        if (StringUtil.equals(value.toLowerCase(), "true"))
-                        {
-                            addField(objectName, tFields, new TField(ATTR_WIDTH, TiledObjectType.FLOAT, Double.toString(w)));
-                            addField(objectName, tFields, new TField(ATTR_HEIGHT, TiledObjectType.FLOAT, Double.toString(h)));
+                        if (StringUtil.equals(value.toLowerCase(), "true")) {
+                            addField(objectName, tFields,
+                                    new TField(ATTR_WIDTH, TiledObjectType.FLOAT, Double.toString(w)));
+                            addField(objectName, tFields,
+                                    new TField(ATTR_HEIGHT, TiledObjectType.FLOAT, Double.toString(h)));
                         }
                     }
                     // export tile index field ?
-                    else if (StringUtil.equals(name, ATTR_VALUE_EXPORT_TILE_INDEX))
-                    {
+                    else if (StringUtil.equals(name, ATTR_VALUE_EXPORT_TILE_INDEX)) {
                         // set to true ? --> add 'tileIndex' field
-                        if (StringUtil.equals(value.toLowerCase(), "true"))
-                        {
+                        if (StringUtil.equals(value.toLowerCase(), "true")) {
                             // compute tile index
                             final int tileIndex = (((int) x) / tileSize) + ((((int) y) / tileSize) * mapWidth);
                             // add field
-                            addField(objectName, tFields, new TField(FIELD_TILE_INDEX, TiledObjectType.INT, Double.toString(tileIndex)));
+                            addField(objectName, tFields,
+                                    new TField(FIELD_TILE_INDEX, TiledObjectType.INT, Double.toString(tileIndex)));
                         }
                     }
                     // export visible field ?
-                    else if (StringUtil.equals(name, ATTR_VALUE_EXPORT_VISIBLE))
-                    {
+                    else if (StringUtil.equals(name, ATTR_VALUE_EXPORT_VISIBLE)) {
                         // set to true ? --> add 'visible' field
                         if (StringUtil.equals(value.toLowerCase(), "true"))
                             addField(objectName, tFields, new TField(ATTR_VISIBLE, TiledObjectType.BOOL, visible));
-                    }       
+                    }
                     // export text field ?
-                    else if (StringUtil.equals(name, ATTR_VALUE_EXPORT_TEXT))
-                    {
+                    else if (StringUtil.equals(name, ATTR_VALUE_EXPORT_TEXT)) {
                         // set to true ? --> add 'text' field
                         if (StringUtil.equals(value.toLowerCase(), "true"))
                             addField(objectName, tFields, new TField(ATTR_TEXT, TiledObjectType.STRING, text));
-                    }                         
+                    }
                     // empty type ?
-                    else if (StringUtil.isEmpty(type))
-                    {
+                    else if (StringUtil.isEmpty(type)) {
                         // defined property type ? --> enum type
                         if (!StringUtil.isEmpty(propertyType))
                             addField(objectName, tFields, new TField(name, TiledObjectType.ENUM, value));
@@ -866,19 +855,18 @@ public class TMX
                             addField(objectName, tFields, new TField(name, TiledObjectType.STRING, value));
                     }
                     // bool type ?
-                    else if (TiledObjectType.fromString(type) == TiledObjectType.BOOL)   
+                    else if (TiledObjectType.fromString(type) == TiledObjectType.BOOL)
                         // replace value "true" by "1" or "false" by "0" and add field
-                        addField(objectName, tFields, new TField(name, TiledObjectType.BOOL, StringUtil.equals(value.toLowerCase(), "true") ? "1":"0"));
+                        addField(objectName, tFields, new TField(name, TiledObjectType.BOOL,
+                                StringUtil.equals(value.toLowerCase(), "true") ? "1" : "0"));
                     else
                         addField(objectName, tFields, new TField(name, TiledObjectType.fromString(type), value));
                 }
 
-
                 // create object
                 final SObject object = new SObject(file, id, baseObjectName, objectType, x, y);
                 // iterate over field definitions (allow good ordering of fields)
-                for (String fieldName : fieldDefs.keySet())
-                {
+                for (String fieldName : fieldDefs.keySet()) {
                     // find field declaration
                     final TField field = tFields.get(fieldName);
 
@@ -889,12 +877,12 @@ public class TMX
                     // field not found ?
                     {
                         // patch for DA game to fix Tiled export bug
-                        if (Compiler.DAGame)
-                        {
+                        if (Compiler.DAGame) {
                             final int numField = object.fields.size();
                             // current field is 'next' and we had a previous 'waitId' field ?
                             // --> add 'next' field with NULL value
-                            if (StringUtil.equals(fieldName, "next") && (numField > 0) && StringUtil.equals(object.fields.get(numField - 1).name, "waitid"))
+                            if (StringUtil.equals(fieldName, "next") && (numField > 0)
+                                    && StringUtil.equals(object.fields.get(numField - 1).name, "waitid"))
                                 object.addField(new SField("next", SGDKObjectType.OBJECT, ""));
                         }
                     }
@@ -908,11 +896,10 @@ public class TMX
             Collections.sort(objects, new ObjectComparator(sortBy));
         }
 
-        private static boolean addField(String objectName, Map<String, TField> fields, TField field)
-        {
-            if (fields.containsKey(field.name))
-            {
-                System.out.println("Warning: Object '" + objectName + "' already has a field named '" + field.name + "', new field ignored...");
+        private static boolean addField(String objectName, Map<String, TField> fields, TField field) {
+            if (fields.containsKey(field.name)) {
+                System.out.println("Warning: Object '" + objectName + "' already has a field named '" + field.name
+                        + "', new field ignored...");
                 return false;
             }
 
@@ -922,16 +909,14 @@ public class TMX
             return true;
         }
 
-        private List<Element> getProperties(Element objectElement, List<Element> result)
-        {
+        private List<Element> getProperties(Element objectElement, List<Element> result) {
             final Element properties = XMLUtil.getElement(objectElement, ID_PROPERTIES);
 
             // no more properties
             if (properties == null)
                 return result;
 
-            for (Element propertyElement : XMLUtil.getElements(properties, ID_PROPERTY))
-            {
+            for (Element propertyElement : XMLUtil.getElements(properties, ID_PROPERTY)) {
                 // is it a class (object) property ? --> get its properties
                 if (StringUtil.equals(getAttribute(propertyElement, ATTR_TYPE, "").toLowerCase(), ATTR_VALUE_CLASS))
                     getProperties(propertyElement, result);
@@ -943,8 +928,7 @@ public class TMX
             return result;
         }
 
-        private String getText(Element objectElement)
-        {
+        private String getText(Element objectElement) {
             final Element text = XMLUtil.getElement(objectElement, ID_TEXT);
 
             // no text
@@ -953,29 +937,24 @@ public class TMX
 
             return XMLUtil.getValue(text, "");
         }
-                
+
         @Override
-        public String toString()
-        {
+        public String toString() {
             return "Object layer=" + layerName + " number of object=" + objects.size();
         }
-                
-        static class ObjectComparator implements Comparator<SObject>
-        {
+
+        static class ObjectComparator implements Comparator<SObject> {
             String sortBy;
 
-            ObjectComparator(String sortBy)
-            {
+            ObjectComparator(String sortBy) {
                 this.sortBy = sortBy;
             }
 
             @Override
-            public int compare(SObject o1, SObject o2)
-            {
+            public int compare(SObject o1, SObject o2) {
                 int result;
 
-                if (StringUtil.isEmpty(sortBy))
-                {
+                if (StringUtil.isEmpty(sortBy)) {
                     // sort first on 'index' field
                     result = Long.compare(o1.getFieldLongValue(FIELD_INDEX), o2.getFieldLongValue(FIELD_INDEX));
                     // then sort on 'ind' field
@@ -983,13 +962,12 @@ public class TMX
                         result = Long.compare(o1.getFieldLongValue(FIELD_IND), o2.getFieldLongValue(FIELD_IND));
                     // then sort on 'tileindex' field
                     if (result == 0)
-                        result = Long.compare(o1.getFieldLongValue(FIELD_TILE_INDEX), o2.getFieldLongValue(FIELD_TILE_INDEX));
+                        result = Long.compare(o1.getFieldLongValue(FIELD_TILE_INDEX),
+                                o2.getFieldLongValue(FIELD_TILE_INDEX));
                     // then sort on 'id' field
                     if (result == 0)
                         result = Long.compare(o1.getFieldLongValue(FIELD_ID), o2.getFieldLongValue(FIELD_ID));
-                }
-                else
-                {
+                } else {
                     // sort by user specified field
                     result = Long.compare(o1.getFieldLongValue(sortBy), o2.getFieldLongValue(sortBy));
                 }
@@ -999,13 +977,11 @@ public class TMX
 
     }
 
-    static String getAttribute(Element element, String attrName, String def)
-    {
+    static String getAttribute(Element element, String attrName, String def) {
         return XMLUtil.getAttributeValue(element, attrName, def);
     }
 
-    static Element getElementNamed(List<Element> layers, String name)
-    {
+    static Element getElementNamed(List<Element> layers, String name) {
         for (Element element : layers)
             if (StringUtil.equals(getAttribute(element, ATTR_NAME, "").toLowerCase(), name.toLowerCase()))
                 return element;
@@ -1013,13 +989,11 @@ public class TMX
         return null;
     }
 
-    static boolean hasElementNamed(List<Element> layers, String name)
-    {
+    static boolean hasElementNamed(List<Element> layers, String name) {
         return getElementNamed(layers, name) != null;
     }
 
-    static Element getElement(Node node, String name, String file) throws Exception
-    {
+    static Element getElement(Node node, String name, String file) throws Exception {
         final Element result = XMLUtil.getElement(node, name);
 
         if (result == null)
@@ -1027,17 +1001,17 @@ public class TMX
 
         return result;
     }
-    
-    static void checkAttributValue(Element element, String attrName, String value, String def, String file) throws Exception
-    {
+
+    static void checkAttributValue(Element element, String attrName, String value, String def, String file)
+            throws Exception {
         final String attrValue = getAttribute(element, attrName, def).toLowerCase();
 
         if (!StringUtil.equals(attrValue, value))
-            throw new Exception("'" + attrValue + "' " + attrName + " not supported (" + def + " expected) in TMX file: " + file);
+            throw new Exception(
+                    "'" + attrValue + "' " + attrName + " not supported (" + def + " expected) in TMX file: " + file);
     }
 
-    static int[] getMapData(Element layerElement, int w, int h, String file) throws Exception
-    {
+    static int[] getMapData(Element layerElement, int w, int h, String file) throws Exception {
         if (XMLUtil.getAttributeIntValue(layerElement, ATTR_WIDTH, w) != w)
             throw new Exception("Layer width do not match map width in TMX file: " + file);
         if (XMLUtil.getAttributeIntValue(layerElement, ATTR_HEIGHT, h) != h)
@@ -1050,7 +1024,8 @@ public class TMX
         final String[] values = XMLUtil.getFirstValue(dataElement, "").split(",");
 
         if (values.length != (w * h))
-            throw new Exception("Data size (" + values.length + ") does not match Layer dimension (" + w + " x " + h + ") in TMX file: " + file);
+            throw new Exception("Data size (" + values.length + ") does not match Layer dimension (" + w + " x " + h
+                    + ") in TMX file: " + file);
 
         final int[] result = new int[values.length];
 
