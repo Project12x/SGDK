@@ -1,270 +1,151 @@
 # SGDK Enhancement Roadmap
 
-Combined plan for upstream bug fixes and new engine features. Every module is a **composable building block** — mix and match freely. No module assumes or excludes a genre.
+Two tracks: **lightweight improvements to the SGDK fork** (upstream-friendly) and a **separate game engine library** built on top of SGDK.
 
 ---
 
-## Phase 0 — Bug Fixes
+## Track A — SGDK Fork (Upstream-Friendly)
 
-Quick wins that fix real issues and build familiarity with SGDK internals.
+Low-level improvements that belong in the SDK itself. No architecture imposed, no opinions about how games should be structured. These could be submitted as PRs to the official SGDK repo.
 
-| Task | Issue | Status | Notes |
-|------|-------|--------|-------|
-| Rescomp: Tiled object templates | [#466](https://github.com/Stephane-D/SGDK/issues/466) | **Done** | Full .tx loading, attribute/property merging |
-| Team Player auto-detect fix | [#326](https://github.com/Stephane-D/SGDK/issues/326) | **Done** | Independent per-port detection in `JOY_reset()` |
-| Tilemap flip functions | [#461](https://github.com/Stephane-D/SGDK/issues/461) | **Done** | `VDP_setTileMapDataRectFlipped()` + wrapper |
-| Retro-Bit controller timing | [#363](https://github.com/Stephane-D/SGDK/issues/363) | **Blocked** | Needs real hardware to tune timing |
+### A0 — Bug Fixes
 
----
+| Task | Issue | Status |
+|------|-------|--------|
+| Rescomp: Tiled object templates | [#466](https://github.com/Stephane-D/SGDK/issues/466) | **Done** |
+| Team Player auto-detect fix | [#326](https://github.com/Stephane-D/SGDK/issues/326) | **Done** |
+| Tilemap flip functions | [#461](https://github.com/Stephane-D/SGDK/issues/461) | **Done** |
+| Retro-Bit controller timing | [#363](https://github.com/Stephane-D/SGDK/issues/363) | **Blocked** (needs hardware) |
 
-## Phase 1 — Entity Pool System
+### A1 — VDP Helpers
 
-> Fixed-size entity pool — the foundation everything else builds on.
+Additional low-level VDP functions that extend SGDK's tilemap/sprite API without imposing design:
 
-- Fixed-size pool with O(1) alloc/free (free-list)
-- Component-style data attachment (position, velocity, sprite, collision, custom)
-- Iteration primitives: `ENTITY_forEach(mask, callback)`
-- Automatic sprite engine integration: spawn → sprite allocated, kill → sprite released
-- Pool stats API for profiling (active count, high watermark)
+- Tilemap region copy between planes
+- Batch tile attribute update (set palette/priority on existing tiles)
+- Sprite link list utilities
 
-**Depends on:** Nothing — foundational system.
+### A2 — Input Helpers
 
----
+Thin stateless wrappers on `JOY_readJoypad()` — no buffering, no mapping, no RAM cost:
 
-## Phase 1.5 — Debug & Profiling Overlay
+- `JOY_justPressed(port)` — edge-detect (pressed this frame, not last)
+- `JOY_justReleased(port)` — released this frame
+- `JOY_held(port, frames)` — button held for N frames
 
-> Build profiling tools BEFORE the systems you need to profile.
+### A3 — Debug Overlay
 
-- On-screen CPU usage bar (cycles per frame, percentage)
-- Entity count, free RAM, DMA queue depth display
-- Hitbox/collision visualization toggle
-- Compile-time `#ifdef DEBUG` — zero overhead in release builds
-- KLog integration for serial debugging
+Compile-time `#ifdef DEBUG` — zero ROM/RAM in release builds:
 
-**Depends on:** Phase 1 (entity stats).
+- CPU usage bar (cycles per frame)
+- Free RAM display
+- DMA queue depth
+- Sprite count / entity count hooks (game provides the count)
+- KLog wrappers with log levels
 
----
+### A4 — Timer Primitives
 
-## Phase 2A — Collision System (Genre-Agnostic Core)
+Bare-metal frame-counting timers with no scene/state coupling:
 
-> Universal collision detection layer usable by ANY game type.
-
-- **Spatial grid** — configurable cell size, O(1) insert/remove, neighbor queries
-- **Tilemap collision** — per-tile type flags (solid, slope, one-way, empty, custom). `COL_checkTile(x, y)` → tile type + penetration vector
-- **Entity-vs-entity** — AABB and circle overlap tests via spatial grid
-- **Collision layers/masks** — enemies don't collide with each other, bullets hit enemies but not player, etc.
-- `COL_moveAndSlide(entity, velocity)` — generic movement with collision response
-
-**Depends on:** Phase 1.
+- `TIMER_start(id)` / `TIMER_elapsed(id)` — measure frame intervals
+- `TIMER_setAlarm(id, frames, callback)` — one-shot callback
+- Fixed-size, no heap, no opinions about pause state
 
 ---
 
-## Phase 2B — Platformer Physics Module (Optional Addon)
+## Track B — Game Engine Library (Separate Repo)
 
-> Platformer-specific behaviors layered on top of Phase 2A. **Not linked unless used.**
+> **Not part of the SGDK fork.** A separate library (`libgenesis-engine` or similar) that links against SGDK. Games choose which modules to include. Zero impact on games that don't use it.
 
-- fix16 gravity, acceleration, deceleration, max velocity profiles
-- Slope snapping, ceiling bonk, coyote time, variable jump height
-- Wall/floor/ceiling sensor system (SMW-style)
-- State machine: grounded, airborne, wall-slide, swimming, climbing
-- Configurable physics profiles (swap between ground/air/water/ice constants)
+### B1 — Entity Pool
 
-**Depends on:** Phase 2A.
+- Fixed-size pool with O(1) alloc/free
+- Component attachment (position, velocity, sprite, collision, custom)
+- Optional sprite engine integration (opt-in, not automatic)
+- Iteration primitives and pool stats
 
----
+### B2 — Collision System
 
-## Phase 3 — Camera System
+- Spatial grid (configurable cell size)
+- Tilemap collision queries
+- AABB/circle overlap, collision layers/masks
+- `moveAndSlide()` collision response
 
-> Reusable camera with common 2D behaviors. Genre-agnostic by design.
+### B3 — Platformer Physics (Optional Addon)
 
-- Smooth lerp follow with configurable speed and dead zones
-- Screen shake with decay
-- Room/section locking with transition animations
-- **Platformer preset:** Snap-to-ground, directional bias, L/R look-ahead
-- **Top-down preset:** Centered follow with edge push
+- fix16 gravity, acceleration, deceleration
+- Slopes, coyote time, variable jump height
+- Sensor system, physics state machine
+- **Not linked unless explicitly included**
 
-**Depends on:** Phase 1.
+### B4 — Camera
 
----
+- Lerp follow, dead zones, screen shake
+- Room locking with transitions
+- Genre presets (platformer, top-down)
 
-## Phase 4 — Scene & State Manager
+### B5 — Scene Manager
 
-> Title → gameplay → pause → game over. Every game needs this.
+- Scene stack with push/pop
+- Per-scene lifecycle callbacks
+- Transition effects (fade, wipe, iris)
+- Scene-scoped resource management
 
-- Scene stack with push/pop (pause overlay, nested menus)
-- Per-scene `init()`, `update()`, `draw()`, `destroy()` callbacks
-- Transition effects (fade, wipe, iris) with configurable timing
-- Scene-scoped resource loading/unloading
-- Global state preserved across scene changes (score, lives, inventory)
+### B6 — Animation Controller
 
-**Depends on:** Phase 1 (entity lifecycle per-scene cleanup).
+- Data-driven frame sequences
+- Frame callbacks (attack frame → event)
+- Transition rules, chain/blend support
 
----
+### B7 — Input System (Full)
 
-## Phase 5 — Timer & Scheduler System
+- Action mapping (physical → logical buttons)
+- Input buffering with configurable window
+- Combo detection
+- Remapping support
 
-> Stop rolling frame counters by hand.
+### B8 — UI & Menus
 
-- `TIMER_after(frames, callback)` — one-shot delayed callback
-- `TIMER_every(frames, callback)` — repeating periodic callback
-- `TIMER_cooldown(id, frames)` — named cooldown with `TIMER_isReady(id)` check
-- Pause-aware (timers freeze when scene is paused)
-- Lightweight — fixed-size timer pool, zero heap allocation
+- Widget primitives (label, selector, toggle, slider)
+- Menu stack with cursor navigation
+- HUD layer, dialog boxes
+- Window plane integration
 
-**Depends on:** Phase 4 (pause-awareness from scene manager).
+### B9 — Save System
 
----
+- Versioned save slots with checksum
+- Corruption detection and recovery
+- Save slot management UI
+- Migration support (v1 save → v2 game)
 
-## Phase 6 — Input Abstraction
+### B10 — MAP Triggers
 
-> Beyond raw joypad reads.
+- Tiled object layer parsing via rescomp
+- Runtime trigger detection and callbacks
+- Spawn points, dynamic tile manipulation
 
-- Action mapping: bind physical buttons to logical actions (`ACTION_JUMP`, `ACTION_ATTACK`)
-- Input buffering with configurable window (critical for action games)
-- `INPUT_justPressed()`, `INPUT_held()`, `INPUT_released()` per action
-- Combo detection (sequence of actions within time window)
-- Remapping support (accessibility, player preference)
+### B11 — Particle System
 
-**Depends on:** Phase 5 (timing for buffer windows and combos).
-
----
-
-## Phase 7 — Animation Controller
-
-> Data-driven animation beyond raw sprite frames.
-
-- Animation sequences defined as resource data (frame indices, durations, loop mode)
-- Frame callbacks: trigger logic on specific frames (attack frame → spawn hitbox)
-- Transition rules: which animations can interrupt which
-- Blend/chain support: attack → attack-recovery → idle
-- `ANIM_play(entity, animId)`, `ANIM_isFinished(entity)`, `ANIM_getFrame(entity)`
-
-**Depends on:** Phase 1 (entity attachment).
-
----
-
-## Phase 8 — UI & Menu System
-
-> Every game ships with menus. Build them once.
-
-- Widget primitives: label, selector, toggle, slider, progress bar
-- Menu stack with cursor navigation (D-pad) and confirm/cancel
-- HUD layer (fixed-position elements, auto-updating from game state)
-- Dialog box with typewriter text, portraits, and player choices
-- Window plane integration for overlay UI without disturbing BG_A/BG_B
-
-**Depends on:** Phase 4 (scene manager for menu scenes), Phase 7 (animated UI elements).
-
----
-
-## Phase 9 — Save System (SRAM)
-
-> Structured save/load that handles the real-world edge cases.
-
-- Versioned save slots with magic number + checksum validation
-- `SAVE_write(slot, data, size)` / `SAVE_read(slot, data, size)`
-- Corruption detection and recovery (fallback to defaults)
-- Save slot management UI integration (Phase 8)
-- Migration support: load v1 save in v2 game with field additions
-
-**Depends on:** Phase 8 (save slot UI).
-
----
-
-## Phase 10 — MAP Engine v2 (Trigger System)
-
-> Extend SGDK's MAP scrolling engine with Tiled object layer events.
-
-- Parse Tiled object layers via rescomp into trigger arrays
-- Runtime trigger detection: `MAP_checkTriggers(x, y)` → callback dispatch
-- Trigger types: enter/exit zones, touch-once, repeatable, directional
-- Entity spawn points embedded in map data
-- Dynamic tile manipulation: `MAP_setTile(x, y, newTile)` for ? blocks, breakable bricks
-
-**Depends on:** Phase 1, Phase 2A.
-
----
-
-## Phase 11 — Particle System
-
-> Lightweight pooled particles — thin layer on Entity Pool.
-
-- Dedicated particle pool (separate from gameplay entities, higher count, smaller struct)
-- Emitter presets: burst, stream, cone, ring
-- Per-particle: position, velocity, lifetime, gravity, fade, animation
-- `PARTICLE_emit(emitter, x, y, count)` — fire and forget
+- Dedicated particle pool (small struct, high count)
+- Emitter presets (burst, stream, cone)
 - Auto-recycle on lifetime expiry
 
-**Depends on:** Phase 1 (pool pattern), Phase 7 (particle animation).
+### B12 — AI Behaviors
 
----
+- Patrol, chase/flee, state machine framework
+- Line-of-sight via tilemap collision
+- Spawner patterns
 
-## Phase 12 — AI Behavior Primitives
+### B13 — Raster Effects
 
-> Common enemy/NPC behaviors as composable building blocks.
+- Declarative HBlank chaining
+- Built-in effects (scroll wave, palette gradient, split-screen)
 
-- Patrol: walk between waypoints, pause at endpoints
-- Chase/flee: move toward/away from target entity
-- State machine framework: define states + transitions as data
-- Line-of-sight check via tilemap collision (Phase 2A)
-- Spawner pattern: emit entities on timer or trigger
+### B14 — Interactive Music
 
-**Depends on:** Phase 2A (collision for LOS), Phase 5 (timers for patrol delays).
-
----
-
-## Phase 13 — Raster Effects Framework
-
-> Declarative HBlank interrupt chaining for per-scanline effects.
-
-- `RASTER_addEffect(startLine, endLine, callback)`
-- Automatic HInt setup, priority sorting, minimal overhead when idle
-- Built-in library: scroll wave, palette gradient, split-screen, water reflection
-- Safe integration with VDP/DMA
-
-**Depends on:** Nothing technically, but lower priority than gameplay systems.
-
----
-
-## Phase 14 — Interactive Music (XGM2 Extension)
-
-> Context-sensitive music on top of XGM2.
-
-- Beat-synced section transitions (verse → chorus on next bar boundary)
-- Channel layering: add/remove instrument tracks dynamically
-- Stinger overlay (coin sound over music without interrupting)
-- Music state machine: define transitions in resource files
-
-**Depends on:** Deep understanding of XGM2 Z80 driver internals.
-
----
-
-## Module Composability
-
-Genres blend. Pick what your game needs.
-
-| Module | What it gives you |
-|--------|-------------------|
-| Entity Pool (1) | Object lifecycle — **every game needs this** |
-| Debug Overlay (1.5) | Dev-time profiling — **use during all development** |
-| Spatial Grid (2A) | Fast entity-vs-entity queries |
-| Tilemap Collision (2A) | Solid world geometry |
-| Platformer Physics (2B) | Gravity, slopes, jump arcs — opt-in |
-| Camera (3) | Smooth scrolling with presets |
-| Scene Manager (4) | Game flow, transitions, pause |
-| Timers (5) | Cooldowns, delays, periodic events |
-| Input (6) | Button mapping, buffering, combos |
-| Animation (7) | Data-driven frame sequences |
-| UI/Menus (8) | HUD, dialogs, menu navigation |
-| Save System (9) | SRAM with checksums and versioning |
-| MAP Triggers (10) | Data-driven level events |
-| Particles (11) | Fire-and-forget visual effects |
-| AI Behaviors (12) | Patrol, chase, state machines |
-| Raster Effects (13) | Per-scanline VDP tricks |
-| Interactive Music (14) | Context-reactive audio |
-
-> [!TIP]
-> **Survivor/RPG hybrid:** Entity Pool + Spatial Grid + Tilemap Collision + Camera + Scene Manager + Timers + Input + Animation + UI + Save + MAP Triggers + Particles + AI Behaviors. No platformer physics needed.
+- Beat-synced section transitions
+- Channel layering, stinger overlay
+- Music state machine
 
 ---
 
@@ -272,33 +153,60 @@ Genres blend. Pick what your game needs.
 
 ```mermaid
 graph TD
-    P0[Phase 0: Bug Fixes] --> P1[Phase 1: Entity Pool]
-    P1 --> P1_5[Phase 1.5: Debug Overlay]
-    P1 --> P2A[Phase 2A: Collision]
-    P1 --> P3[Phase 3: Camera]
-    P1 --> P4[Phase 4: Scene Manager]
-    P1 --> P7[Phase 7: Animation]
-    P2A --> P2B[Phase 2B: Platformer Physics]
-    P2A --> P10[Phase 10: MAP Triggers]
-    P2A --> P12[Phase 12: AI Behaviors]
-    P4 --> P5[Phase 5: Timers]
-    P5 --> P6[Phase 6: Input]
-    P5 --> P12
-    P7 --> P8[Phase 8: UI/Menus]
-    P4 --> P8
-    P8 --> P9[Phase 9: Save System]
-    P7 --> P11[Phase 11: Particles]
-    P13[Phase 13: Raster Effects]
-    P14[Phase 14: Interactive Music]
+    subgraph "Track A: SGDK Fork"
+        A0[A0: Bug Fixes]
+        A1[A1: VDP Helpers]
+        A2[A2: Input Helpers]
+        A3[A3: Debug Overlay]
+        A4[A4: Timer Primitives]
+    end
+
+    subgraph "Track B: Engine Library"
+        B1[B1: Entity Pool]
+        B2[B2: Collision]
+        B3[B3: Platformer Physics]
+        B4[B4: Camera]
+        B5[B5: Scene Manager]
+        B6[B6: Animation]
+        B7[B7: Input System]
+        B8[B8: UI/Menus]
+        B9[B9: Save System]
+        B10[B10: MAP Triggers]
+        B11[B11: Particles]
+        B12[B12: AI Behaviors]
+        B13[B13: Raster Effects]
+        B14[B14: Interactive Music]
+    end
+
+    A0 --> A1
+    A0 --> A2
+    A0 --> A3
+    A0 --> A4
+
+    B1 --> B2
+    B1 --> B4
+    B1 --> B5
+    B1 --> B6
+    B2 --> B3
+    B2 --> B10
+    B2 --> B12
+    B5 --> B7
+    B5 --> B8
+    B6 --> B8
+    B6 --> B11
+    B8 --> B9
+
+    A2 -.->|"used by"| B7
+    A4 -.->|"used by"| B5
+    A3 -.->|"used by"| B1
 ```
 
 ---
 
 ## Principles
 
-- **Building blocks, not genre kits** — every API is opt-in, modules compose freely
-- **Zero-cost when unused** — modules not linked = zero ROM/RAM overhead
-- **Ship each phase as usable** — don't wait for Phase 14 to use Phase 1
-- **Debug tools early** — profiling before optimization
+- **Track A changes SGDK, Track B uses SGDK** — clean separation
+- **Track A is upstream-submittable** — could become PRs to official SGDK
+- **Track B is opt-in per module** — no module is mandatory, zero cost when not linked
+- **Track B lives in its own repo** — independent release cycle, own test suite
 - **Genesis-first** — every feature must fit in 68000 cycles and 64KB RAM
-- **Upstream-friendly** — SGDK code style, submittable as PRs
