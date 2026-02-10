@@ -11,6 +11,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 - Standard project documentation: ARCHITECTURE, CHANGELOG, HOWTO, ROADMAP, STATE
 - Open issue analysis for #326, #363, #436, #461, #466
 - `VDP_setTileMapDataRectFlipped()` and `VDP_setTileMapExFlipped()` for HFlip/VFlip tilemap drawing (#461)
+- `JOY_justPressed()`, `JOY_justReleased()`, `JOY_changed()` polling-style input edge detection
 
 ### Fixed
 - Rescomp now fully supports Tiled object templates (.tx files) with attribute and property merging (#466)
